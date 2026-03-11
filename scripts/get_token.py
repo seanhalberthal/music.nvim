@@ -7,12 +7,15 @@ CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET")
 REDIRECT_URI = "http://127.0.0.1:8888/callback"
 SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state"
-auth_url = (
-    "https://accounts.spotify.com/authorize"
-    f"?client_id={CLIENT_ID}&response_type=code"
-    f"&redirect_uri={urllib.parse.quote(REDIRECT_URI)}"
-    f"&scope={SCOPES}"
-)
+
+params = urllib.parse.urlencode({
+    'client_id': CLIENT_ID,
+    'response_type': 'code',
+    'redirect_uri': REDIRECT_URI,
+    'scope': SCOPES,
+})
+auth_url = f"https://accounts.spotify.com/authorize?{params}"
+
 webbrowser.open(auth_url)
 
 # Tiny local server catches the redirect from Spotify
