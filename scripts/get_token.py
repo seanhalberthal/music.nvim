@@ -25,7 +25,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(b"Done! Close this tab.")
     def log_message(self, *_): pass
 
-http.server.HTTPServer(('localhost', 8888), Handler).handle_request()
+http.server.HTTPServer(('127.0.0.1', 8888), Handler).handle_request()
 
 # Exchange the code for access + refresh tokens
 creds = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()

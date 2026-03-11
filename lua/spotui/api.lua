@@ -139,7 +139,7 @@ local function do_refresh(tokens, cb)
     local new = vim.fn.json_decode(raw)
     if new and new.access_token then
       tokens.access_token = new.access_token
-      _tokens = tokens        -- ← directly update the module-level cache
+      _tokens = tokens -- directly updates the module-level cache
       save_tokens(tokens)
       cb(tokens)
     else
