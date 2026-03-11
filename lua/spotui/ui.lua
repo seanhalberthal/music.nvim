@@ -136,7 +136,8 @@ local function expand(track)
     vim.api.nvim_win_set_config(state.win, get_win_cfg(opts.expanded_height))
   else
     state.win = vim.api.nvim_open_win(state.buf, false, get_win_cfg(opts.expanded_height))
-    vim.wo[state.win].winhl = 'Normal:NormalFloat,FloatBorder:FloatBorder'
+    local hl = config.options.highlights
+    vim.wo[state.win].winhl = ('Normal:%s,FloatBorder:%s,NormalFloat:%s'):format(hl.background, hl.border, hl.text)
   end
   set_lines(lines)
 
@@ -213,7 +214,8 @@ function M.toggle()
       state.buf, false,
       get_win_cfg(config.options.window.compact_height)
     )
-    vim.wo[state.win].winhl = 'Normal:NormalFloat,FloatBorder:FloatBorder'
+    local hl = config.options.highlights
+    vim.wo[state.win].winhl = ('Normal:%s,FloatBorder:%s,NormalFloat:%s'):format(hl.background, hl.border, hl.text)
     set_lines({ '  ♪  Loading...' })
 
     state.poll_timer = vim.loop.new_timer()

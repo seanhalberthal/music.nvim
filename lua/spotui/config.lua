@@ -8,6 +8,11 @@ M.options = {
     expanded_height = 16, -- tall: album art + track info
     compact_height = 3,   -- slim: just name, artist, time
     expand_duration = 1500, -- ms before shrinking down
+  },
+    highlights = {
+    background = 'NormalFloat', -- control window background
+    border = 'FloatBorder', -- control border color
+    text = 'NormalFloat', -- control text color
   }
 }
 

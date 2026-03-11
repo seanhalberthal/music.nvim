@@ -86,7 +86,6 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 | `<leader>sb` | Previous track |
 
 ## Configuration
-
 These are the defaults:
 ```lua
 require('spotui').setup({
@@ -97,9 +96,28 @@ require('spotui').setup({
     expanded_height = 16,    -- height when album art is visible
     compact_height = 3,      -- height after minimizing
     expand_duration = 1500,  -- ms before shrinking to compact view
+  },
+  highlights = {
+    background = 'NormalFloat',  -- window background highlight group
+    border = 'FloatBorder',      -- border highlight group
+    text = 'NormalFloat',        -- text highlight group
   }
 })
 ```
+
+To blend the window into your colorscheme instead of using the default float colors:
+```lua
+highlights = {
+  background = 'Normal',
+  border = 'Normal',
+  text = 'Normal',
+}
+```
+
+Any valid Neovim highlight group works here. Run `:Telescope highlights` or
+`:highlight` to browse what's available in your current theme.
+```
+
 ## How it works
 
 SpotUI polls the Spotify Web API every `poll_interval` milliseconds using async
