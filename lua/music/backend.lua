@@ -5,6 +5,8 @@ local config = require('music.config')
 local _active_backend = nil
 local _detecting = false
 
+local is_macos = vim.fn.has('macunix') == 1
+
 --- Check if a macOS app is running via System Events.
 --- cb(is_running) — boolean.
 local function is_app_running(app_name, cb)
@@ -35,6 +37,14 @@ local function is_app_running(app_name, cb)
   end)
 end
 
+--- Resolve the Spotify module — use AppleScript on macOS, Web API elsewhere.
+local function resolve_spotify()
+  if is_macos then
+    return require('music.spotify_local')
+  end
+  return require('music.spotify')
+end
+
 --- Detect which backend to use based on config and running apps.
 --- cb(backend_module) — the resolved backend, or nil if nothing is available.
 local function detect_backend(cb)
@@ -45,7 +55,7 @@ local function detect_backend(cb)
     cb(require('music.apple_music'))
     return
   elseif pref == 'spotify' then
-    cb(require('music.spotify'))
+    cb(resolve_spotify())
     return
   end
 
@@ -58,7 +68,7 @@ local function detect_backend(cb)
     end
     is_app_running('Spotify', function(spotify_running)
       if spotify_running then
-        cb(require('music.spotify'))
+        cb(resolve_spotify())
       else
         cb(nil)
       end
@@ -85,6 +95,11 @@ end
 --- Force re-detection on the next call (e.g., when user switches app).
 function M.invalidate_cache()
   _active_backend = nil
+end
+
+--- Returns the currently active backend module, or nil if not yet detected.
+function M.active_backend()
+  return _active_backend
 end
 
 function M.get_now_playing(cb)
