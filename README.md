@@ -35,16 +35,19 @@ scoop install chafa
 
 ## Supported Music Apps
 
-- **Spotify** — requires Spotify app running + Spotify Premium for playback controls
+- **Spotify (macOS)** — uses AppleScript to talk to Spotify.app directly, no API key needed
+- **Spotify (other platforms)** — uses the Spotify Web API, requires API credentials and Spotify Premium for playback controls
 - **Apple Music** — requires Music.app running (macOS only)
 
-The plugin defaults to Apple Music. You can also set it to `'spotify'` or `'auto'` to detect which is running.
+The plugin defaults to Apple Music. You can also set it to `'spotify'` or `'auto'` to detect which is running. When set to `'spotify'`, the plugin automatically picks the right backend for your platform.
 
 ## Setup
 
-**1. Spotify setup (only if using Spotify)**
+**1. Spotify setup (only if using Spotify on non-macOS platforms)**
 
-Create a Spotify app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard),
+On macOS, Spotify works out of the box via AppleScript — no API credentials needed.
+
+On other platforms, create a Spotify app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard),
 create a new app, and set the redirect URI to `http://127.0.0.1:8888/callback`.
 Grab your Client ID and Client Secret.
 
@@ -134,7 +137,8 @@ Any valid Neovim highlight group works here. Run `:Telescope highlights` or
 ## How it works
 
 music.nvim polls the active music app every `poll_interval` milliseconds:
-- **Spotify**: uses the Spotify Web API via async curl calls
+- **Spotify (macOS)**: uses osascript to talk to Spotify.app directly
+- **Spotify (other platforms)**: uses the Spotify Web API via async curl calls
 - **Apple Music**: uses osascript to query the Music.app (macOS only)
 
 Album art is downloaded once per track and cached for the session, then
@@ -144,7 +148,7 @@ rendered as Unicode block characters using chafa.
 
 - Album art rendering requires a terminal with Unicode support (most modern
   terminals work fine eg. Windows Terminal, WezTerm, Kitty, iTerm2, Alacritty)
-- Spotify playback controls require Spotify Premium
+- Spotify Web API playback controls require Spotify Premium (macOS AppleScript backend has no such restriction)
 - Apple Music support requires macOS
 - The Spotify token file is stored at `~/.spotify_nvim_tokens.json` and refreshes
   automatically when it expires

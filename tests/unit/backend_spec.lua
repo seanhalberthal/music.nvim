@@ -47,6 +47,7 @@ describe('backend', function()
     -- Inject mock backends into package.loaded
     package.loaded['music.apple_music'] = mock_apple
     package.loaded['music.spotify'] = mock_spotify
+    package.loaded['music.spotify_local'] = mock_spotify
   end)
 
   describe('preferred_backend config', function()

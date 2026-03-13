@@ -140,10 +140,11 @@ local function expand(track)
     return
   end
 
-  -- Otherwise try Apple Music artwork extraction
-  local apple = require('music.apple_music')
-  if apple.extract_artwork then
-    apple.extract_artwork(function(art_path, _)
+  -- Otherwise try local artwork extraction (Apple Music / Spotify local)
+  local backend = require('music.backend')
+  local active = backend.active_backend()
+  if active and active.extract_artwork then
+    active.extract_artwork(function(art_path, _)
       local art_mod = require('music.art')
       local art
       if art_path then
