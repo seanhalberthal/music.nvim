@@ -1,1 +1,1 @@
-require('spotui').setup()
+require('music').setup()

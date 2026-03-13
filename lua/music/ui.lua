@@ -1,6 +1,10 @@
 -- Controls floating window, timer, and display logic.
 local M = {}
-local config = require('spotui.config')
+local config = require('music.config')
+local utils = require('music.utils')
+local fmt_time = utils.fmt_time
+local clean_name = utils.clean_name
+local trim_artist = utils.trim_artist
 
 -- All runtime states
 local state = {
@@ -11,13 +15,6 @@ local state = {
   current_track = nil, -- Last track received
   expanded = false,
 }
-
--- Format milliseconds as M:SS
-local function fmt_time(ms)
-  local s = math.floor(ms / 1000)
-  return ('%d:%02d'):format(math.floor(s / 60), s % 60)
-  -- Adds leading 0 for single digit timer eg. 1:03
-end
 
 -- Checks if floating window exists, countering potential user close.
 local function win_valid()
@@ -72,21 +69,6 @@ local function set_lines(lines)
   vim.bo[state.buf].modifiable = false
 end
 
--- Strips '(feat.)' to to save space.
-local function clean_name(name)
-  -- Remove (feat. ...) and (with ...) and [feat. ...] variants
-  name = name:gsub('%s*%(feat%.?[^%)]*%)', '')
-  name = name:gsub('%s*%[feat%.?[^%]]*%]', '')
-  name = name:gsub('%s*%(with[^%)]*%)', '')
-  return name:match('^%s*(.-)%s*$')  -- trim whitespace
-end
-
--- Truncates artist names to fit
-local function trim_artist(artist, max_len)
-  if #artist <= max_len then return artist end
-  return artist:sub(1, max_len - 3) .. '...'
-end
-
 -- Builds the 3 line view after minimizing
 local function compact_lines(track)
   if not track then
@@ -117,46 +99,70 @@ local function expand(track)
   state.expanded = true
   local opts = config.options.window
 
-  -- Fetches album art from art.lua
-  local art = require('spotui.art').get_lines(track and track.art_url, opts.width)
+  -- Determine how to get artwork based on what's available
+  local function render_expanded(art_lines)
+    if not win_valid() then return end
 
-  -- Builds content
-  local lines = {}
-  for _, l in ipairs(art) do
-    table.insert(lines, l)
+    local lines = {}
+    for _, l in ipairs(art_lines) do
+      table.insert(lines, l)
+    end
+    table.insert(lines, '  ' .. ('─'):rep(opts.width - 4))
+    if track then
+      table.insert(lines, ('  ♪  %s'):format(track.name))
+      table.insert(lines, ('     %s'):format(track.artist))
+      table.insert(lines, ('     %s · %s'):format(track.album, fmt_time(track.duration_ms)))
+    else
+      table.insert(lines, '  Nothing playing right now.')
+    end
+
+    if win_valid() then
+      vim.api.nvim_win_set_config(state.win, get_win_cfg(opts.expanded_height))
+    else
+      state.win = vim.api.nvim_open_win(state.buf, false, get_win_cfg(opts.expanded_height))
+      local hl = config.options.highlights
+      vim.wo[state.win].winhl = ('Normal:%s,FloatBorder:%s,NormalFloat:%s'):format(hl.background, hl.border, hl.text)
+    end
+    set_lines(lines)
+
+    if state.shrink_timer then
+      state.shrink_timer:stop()
+      state.shrink_timer:close()
+    end
+    state.shrink_timer = vim.loop.new_timer()
+    state.shrink_timer:start(opts.expand_duration, 0, vim.schedule_wrap(shrink))
   end
-  table.insert(lines, '  ' .. ('─'):rep(opts.width - 4))
-  if track then
-    table.insert(lines, ('  ♪  %s'):format(track.name))
-    table.insert(lines, ('     %s'):format(track.artist))
-    table.insert(lines, ('     %s · %s'):format(track.album, fmt_time(track.duration_ms)))
+
+  -- If track has an art_url (Spotify), use URL-based download
+  if track and track.art_url then
+    local art = require('music.art').get_lines(track.art_url, opts.width)
+    render_expanded(art)
+    return
+  end
+
+  -- Otherwise try Apple Music artwork extraction
+  local apple = require('music.apple_music')
+  if apple.extract_artwork then
+    apple.extract_artwork(function(art_path, _)
+      local art_mod = require('music.art')
+      local art
+      if art_path then
+        art = art_mod.get_lines_from_file(art_path, opts.width)
+        vim.fn.delete(art_path)
+      else
+        art = {}
+      end
+      render_expanded(art)
+    end)
   else
-    table.insert(lines, '  Nothing playing right now.')
+    render_expanded({})
   end
-
-  -- Resizes window if already exists.
-  if win_valid() then
-    vim.api.nvim_win_set_config(state.win, get_win_cfg(opts.expanded_height))
-  else
-    state.win = vim.api.nvim_open_win(state.buf, false, get_win_cfg(opts.expanded_height))
-    local hl = config.options.highlights
-    vim.wo[state.win].winhl = ('Normal:%s,FloatBorder:%s,NormalFloat:%s'):format(hl.background, hl.border, hl.text)
-  end
-  set_lines(lines)
-
-  -- Reset the shrink countdown
-  if state.shrink_timer then
-    state.shrink_timer:stop()
-    state.shrink_timer:close()
-  end
-  state.shrink_timer = vim.loop.new_timer()
-  state.shrink_timer:start(opts.expand_duration, 0, vim.schedule_wrap(shrink))
 end
 
 local function on_tick()
   if not win_valid() then return end
 
-  require('spotui.api').get_now_playing(function(track)
+  require('music.backend').get_now_playing(function(track)
 
     -- Nothing playing — always update to compact nil view
     if not track then

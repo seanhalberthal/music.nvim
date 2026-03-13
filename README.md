@@ -1,6 +1,6 @@
-# SpotUI.nvim
+# music.nvim
 
-Because alt-tabbing to Spotify is for people who don't use Neovim.
+Because alt-tabbing to a music player is for people who don't use Neovim.
 
 ![expanded-ui](assets/full-ss.png)
 
@@ -18,7 +18,8 @@ song change.
 - Neovim 0.8+
 - [chafa](https://hpjansson.org/chafa/) — for album art rendering
 - curl — for Spotify API calls
-- A Spotify account
+- osascript — for Apple Music control (macOS only)
+- A Spotify or Apple Music account
 
 **Installing chafa:**
 ```bash
@@ -32,15 +33,20 @@ sudo apt install chafa
 scoop install chafa
 ```
 
+## Supported Music Apps
+
+- **Spotify** — requires Spotify app running + Spotify Premium for playback controls
+- **Apple Music** — requires Music.app running (macOS only)
+
+The plugin defaults to Apple Music. You can also set it to `'spotify'` or `'auto'` to detect which is running.
+
 ## Setup
 
-**1. Create a Spotify app**
+**1. Spotify setup (only if using Spotify)**
 
-Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard),
+Create a Spotify app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard),
 create a new app, and set the redirect URI to `http://127.0.0.1:8888/callback`.
 Grab your Client ID and Client Secret.
-
-**2. Get your tokens**
 
 Create a `.env` file in the project root:
 ```
@@ -57,14 +63,14 @@ python scripts/get_token.py
 This opens a browser window, asks you to authorize the app, and saves a token
 file to `~/.spotify_nvim_tokens.json`. You only need to do this once.
 
-**3. Install the plugin**
+**2. Install the plugin**
 
 With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
-  'AaravB23/spotui-nvim',
+  'seanhalberthal/music.nvim',
   config = function()
-    require('spotui').setup({
+    require('music').setup({
       position = 'bottom-left',
       poll_interval = 2000,
       window = {
@@ -80,16 +86,18 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 | Key | Action |
 |-----|--------|
-| `<leader>sp` | Toggle the window |
-| `<leader>ss` | Play / pause |
-| `<leader>sn` | Next track |
-| `<leader>sb` | Previous track |
+| `<leader>kp` | Toggle the window |
+| `<leader>ks` | Play / pause |
+| `<leader>kn` | Next track |
+| `<leader>kb` | Previous track |
 
 ## Configuration
+
 These are the defaults:
 ```lua
-require('spotui').setup({
-  poll_interval = 2000,      -- how often to check Spotify (ms)
+require('music').setup({
+  poll_interval = 2000,      -- how often to check for track changes (ms)
+  preferred_backend = 'apple_music', -- 'apple_music' | 'spotify' | 'auto'
   position = 'bottom-left',  -- 'top-right', 'top-left', 'bottom-right', 'bottom-left'
   window = {
     width = 30,
@@ -103,6 +111,11 @@ require('spotui').setup({
     text = 'NormalFloat',        -- text highlight group
   }
 })
+```
+
+To force a specific backend:
+```lua
+preferred_backend = 'spotify',  -- or 'apple_music'
 ```
 
 To blend the window into your colorscheme instead of using the default float colors:
@@ -120,22 +133,18 @@ Any valid Neovim highlight group works here. Run `:Telescope highlights` or
 
 ## How it works
 
-SpotUI polls the Spotify Web API every `poll_interval` milliseconds using async
-curl calls via `vim.loop.spawn` so it never blocks the editor. Album art is
-downloaded once per track and cached for the session, then rendered as Unicode
-block characters using chafa.
+music.nvim polls the active music app every `poll_interval` milliseconds:
+- **Spotify**: uses the Spotify Web API via async curl calls
+- **Apple Music**: uses osascript to query the Music.app (macOS only)
+
+Album art is downloaded once per track and cached for the session, then
+rendered as Unicode block characters using chafa.
 
 ## Notes
 
 - Album art rendering requires a terminal with Unicode support (most modern
   terminals work fine eg. Windows Terminal, WezTerm, Kitty, iTerm2, Alacritty)
-- Playback controls require Spotify Premium
-- The token file is stored at `~/.spotify_nvim_tokens.json` and refreshes
+- Spotify playback controls require Spotify Premium
+- Apple Music support requires macOS
+- The Spotify token file is stored at `~/.spotify_nvim_tokens.json` and refreshes
   automatically when it expires
-
-## Roadmap / To-do
-
-- [ ] Playlist switcher: fuzzy finder for recent playlists via Telescope
-- [ ] Statusline component: expose a function for lualine/heirline integration
-- [ ] Colored album art: parse ANSI codes into Neovim highlight groups
-- [ ] Linux/macOS testing: currently developed on Windows, needs validation on other platforms

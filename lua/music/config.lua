@@ -1,7 +1,8 @@
 local M = {}
 
 M.options = {
-  poll_interval = 2000,   -- check Spotify every 2 seconds (ms)
+  poll_interval = 2000,   -- check for playing track every 2 seconds (ms)
+  preferred_backend = 'apple_music', -- 'apple_music' | 'spotify' | 'auto'
   position = 'bottom-left',  -- options: 'top-right', 'top-left', 'bottom-right', 'bottom-left'
   window = {
     width = 30,
