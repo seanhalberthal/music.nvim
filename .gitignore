@@ -1,2 +1,6 @@
 .env
 *.json
+
+# Claude Code
+.claude/*
+!.claude/commands/
