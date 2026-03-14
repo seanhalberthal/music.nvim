@@ -10,4 +10,9 @@ All notable changes to this project will be documented in this file.
 - `active_backend()` function on the backend module
 
 ### Changed
+- Default `poll_interval` reduced from 2000ms to 1000ms for snappier track updates
 - Artwork extraction now uses the active backend instead of hardcoding Apple Music
+
+### Fixed
+- README `highlights.background` default was documented as `'NormalFloat'` but actual default is `'Normal'`
+- README highlight example was misleading (suggested switching to the already-default value)
