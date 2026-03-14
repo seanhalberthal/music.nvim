@@ -9,7 +9,7 @@ describe('config', function()
 
   describe('defaults', function()
     it('has poll_interval', function()
-      assert.equal(2000, config.options.poll_interval)
+      assert.equal(1000, config.options.poll_interval)
     end)
 
     it('has preferred_backend set to apple_music', function()
@@ -28,7 +28,7 @@ describe('config', function()
     end)
 
     it('has highlight settings', function()
-      assert.equal('NormalFloat', config.options.highlights.background)
+      assert.equal('Normal', config.options.highlights.background)
       assert.equal('FloatBorder', config.options.highlights.border)
       assert.equal('NormalFloat', config.options.highlights.text)
     end)
@@ -63,12 +63,12 @@ describe('config', function()
     it('handles nil opts gracefully', function()
       config.apply(nil)
       -- Defaults should remain
-      assert.equal(2000, config.options.poll_interval)
+      assert.equal(1000, config.options.poll_interval)
     end)
 
     it('handles empty opts table', function()
       config.apply({})
-      assert.equal(2000, config.options.poll_interval)
+      assert.equal(1000, config.options.poll_interval)
     end)
 
     it('sets preferred_backend to apple_music', function()

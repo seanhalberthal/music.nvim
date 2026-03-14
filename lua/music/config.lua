@@ -1,7 +1,7 @@
 local M = {}
 
 M.options = {
-  poll_interval = 2000,   -- check for playing track every 2 seconds (ms)
+  poll_interval = 1000,   -- check for playing track every second (ms)
   preferred_backend = 'apple_music', -- 'apple_music' | 'spotify' | 'auto'
   position = 'bottom-left',  -- options: 'top-right', 'top-left', 'bottom-right', 'bottom-left'
   window = {
@@ -11,7 +11,7 @@ M.options = {
     expand_duration = 1500, -- ms before shrinking down
   },
     highlights = {
-    background = 'NormalFloat', -- control window background
+    background = 'Normal',
     border = 'FloatBorder', -- control border color
     text = 'NormalFloat', -- control text color
   }
